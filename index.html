@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Offer Acceptance — Phrase</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap');
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: #f5f7f6;
+      color: #181818;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .card {
+      background: #ffffff;
+      border: 1px solid #e2e8e5;
+      border-radius: 16px;
+      padding: 48px 40px;
+      max-width: 520px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+    }
+
+    .logo-mark {
+      width: 48px; height: 48px;
+      background: #03EAB3;
+      border-radius: 12px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      color: white;
+      font-size: 24px;
+      margin-bottom: 24px;
+    }
+
+    h1 {
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      letter-spacing: -0.3px;
+    }
+
+    .subtitle {
+      font-size: 15px;
+      color: #6b7c74;
+      line-height: 1.5;
+      margin-bottom: 32px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-family: inherit;
+      font-size: 16px;
+      font-weight: 600;
+      padding: 14px 36px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      width: 100%;
+      max-width: 320px;
+    }
+
+    .btn-primary {
+      background: #03EAB3;
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: #02c999;
+      box-shadow: 0 4px 16px rgba(3, 234, 179, 0.3);
+    }
+
+    .btn-primary:disabled {
+      background: #c8d6d0;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    .status-msg {
+      margin-top: 20px;
+      font-size: 14px;
+      color: #6b7c74;
+      min-height: 20px;
+    }
+
+    .status-msg.success { color: #059669; font-weight: 600; }
+    .status-msg.error { color: #ef4444; font-weight: 500; }
+
+    .checkmark {
+      display: none;
+      margin: 0 auto 16px;
+      width: 64px; height: 64px;
+      background: #ecfdf5;
+      border-radius: 50%;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .checkmark.show { display: inline-flex; }
+
+    .checkmark svg {
+      width: 32px; height: 32px;
+      stroke: #059669;
+      stroke-width: 3;
+      fill: none;
+    }
+
+    .no-token h1 { color: #ef4444; }
+
+    .footer {
+      margin-top: 24px;
+      font-size: 12px;
+      color: #a1b0a8;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="card">
+    <div id="logo" class="logo-mark">P</div>
+    <div id="checkmark" class="checkmark">
+      <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>
+    </div>
+
+    <!-- Confirmation view -->
+    <div id="content-confirm" style="display:none;">
+      <h1>Confirm Your Offer Acceptance</h1>
+      <p class="subtitle">Click the button below to confirm you accept the offer. This action will be recorded and cannot be undone.</p>
+      <button class="btn btn-primary" id="acceptBtn" onclick="submitAcceptance()">
+        I Accept the Offer
+      </button>
+      <p class="status-msg" id="statusMsg"></p>
+    </div>
+
+    <!-- Invalid link view -->
+    <div id="content-no-token" class="no-token" style="display:none;">
+      <h1>Invalid Link</h1>
+      <p class="subtitle">This link doesn't contain a valid offer token. Please use the link from your email.</p>
+    </div>
+
+    <p class="footer">Powered by Phrase</p>
+  </div>
+
+  <script>
+    // ============================================================
+    // CONFIGURATION — Replace this with your Apps Script web app URL
+    // ============================================================
+    var SCRIPT_URL = 'YOUR_APPS_SCRIPT_WEB_APP_URL_HERE';
+    // ============================================================
+
+    // Read token from URL
+    var params = new URLSearchParams(window.location.search);
+    var TOKEN = params.get('t') || '';
+
+    if (TOKEN) {
+      document.getElementById('content-confirm').style.display = 'block';
+    } else {
+      document.getElementById('content-no-token').style.display = 'block';
+    }
+
+    function submitAcceptance() {
+      var btn = document.getElementById('acceptBtn');
+      var msg = document.getElementById('statusMsg');
+
+      btn.disabled = true;
+      btn.textContent = 'Submitting...';
+      msg.textContent = '';
+      msg.className = 'status-msg';
+
+      fetch(SCRIPT_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify({
+          token: TOKEN,
+          accepted_at: new Date().toISOString(),
+          user_agent: navigator.userAgent
+        })
+      })
+      .then(function() {
+        document.getElementById('logo').style.display = 'none';
+        document.getElementById('checkmark').classList.add('show');
+        document.getElementById('content-confirm').innerHTML =
+          '<h1>Offer Accepted</h1>' +
+          '<p class="subtitle">Thank you! Your acceptance has been recorded. You can close this page.</p>';
+      })
+      .catch(function() {
+        msg.textContent = 'Something went wrong. Please try again or contact support.';
+        msg.className = 'status-msg error';
+        btn.disabled = false;
+        btn.textContent = 'I Accept the Offer';
+      });
+    }
+  </script>
+
+</body>
+</html>
